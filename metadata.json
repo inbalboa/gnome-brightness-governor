@@ -1,0 +1,17 @@
+{
+    "uuid": "brightness-governor@inbalboa.github.io",
+    "name": "Screen Brightness Governor",
+    "description": "Automatically switch the screen brightness depending on the power supply status",
+    "url": "https://github.com/inbalboa/gnome-brightness-governor",
+    "version": 1,
+    "version-name": "1.0.0",
+    "shell-version": ["48"],
+    "session-modes": [
+        "user",
+        "unlock-dialog"
+    ],
+    "settings-schema": "org.gnome.shell.extensions.brightness-governor",
+    "donations": {
+        "github": "inbalboa"
+    }
+}
