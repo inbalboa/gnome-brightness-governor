@@ -1,8 +1,19 @@
 # Screen Brightness Governor - GNOME Shell Extension
+[<img src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true" height="100">](https://extensions.gnome.org/extension/8277/screen-brightness-governor/)
 
 Automatically switch the screen brightness depending on the power supply status.
 
+![Extension Screenshot](screenshot.png)
+
+## Requirements
+
+- GNOME Shell 48+
+
 ### Installation
+
+### From GNOME Extensions
+
+https://extensions.gnome.org/extension/8277/screen-brightness-governor/
 
 ### Manual Installation
 
@@ -13,6 +24,7 @@ Automatically switch the screen brightness depending on the power supply status.
    cd gnome-brightness-governor
    make install
    ```
+   Requires `git`, `make`, `jq`
 
 2. **Restart GNOME Shell**
 
