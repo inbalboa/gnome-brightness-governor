@@ -5,7 +5,7 @@
     "url": "https://github.com/inbalboa/gnome-brightness-governor",
     "version": 1,
     "version-name": "1.0.0",
-    "shell-version": ["48"],
+    "shell-version": ["49"],
     "session-modes": [
         "user",
         "unlock-dialog"

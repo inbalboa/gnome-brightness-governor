@@ -1,16 +1,15 @@
 import Gio from 'gi://Gio';
 
-import {loadInterfaceXML} from 'resource:///org/gnome/shell/misc/fileUtils.js';
-
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-const BrightnessProxy = Gio.DBusProxy.makeProxyWrapper(
-    loadInterfaceXML('org.gnome.SettingsDaemon.Power.Screen')
-);
-
-const PowerManagerProxy = Gio.DBusProxy.makeProxyWrapper(
-    loadInterfaceXML('org.freedesktop.UPower')
-);
+const PowerManagerProxyInterface = `
+<node>
+  <interface name="org.freedesktop.UPower">
+    <property name="OnBattery" type="b" access="read"/>
+  </interface>
+</node>`;
+const PowerManagerProxy = Gio.DBusProxy.makeProxyWrapper(PowerManagerProxyInterface);
 
 export default class ScreenBrightnessGovernorExtension extends Extension {
     enable() {
@@ -24,21 +23,16 @@ export default class ScreenBrightnessGovernorExtension extends Extension {
                 this._updateScreenBrightness();
         });
 
-        this._brightnessProxy = new BrightnessProxy(
-            Gio.DBus.session,
-            'org.gnome.SettingsDaemon.Power',
-            '/org/gnome/SettingsDaemon/Power',
-            (proxy, error) => {
-                if (error)
-                    this._logError(`Failed to connect to the ${proxy.g_interface_name} D-Bus interface`, error);
-            }
-        );
-        this._brightnessProxy.connectObject('g-properties-changed', (...[, properties]) => {
-            if (properties.lookup_value('Brightness', null) !== null) {
-                this._brightnessProxy.disconnectObject(this);
-                this._updateScreenBrightness();
-            }
-        }, this);
+        this._brightnessManagerChangedId = null;
+        if (Main.brightnessManager) {
+            this._brightnessManagerChangedId = Main.brightnessManager.connect('changed', () => {
+                if (Main.brightnessManager.globalScale && this._brightnessManagerChangedId) {
+                    Main.brightnessManager.disconnect(this._brightnessManagerChangedId);
+                    this._brightnessManagerChangedId = null;
+                    this._updateScreenBrightness();
+                }
+            });
+        }
 
         this._powerManagerProxy = new PowerManagerProxy(
             Gio.DBus.system,
@@ -61,27 +55,34 @@ export default class ScreenBrightnessGovernorExtension extends Extension {
         this._powerManagerProxy.disconnectObject(this);
         delete this._powerManagerProxy;
 
-        this._brightnessProxy.disconnectObject(this);
-        delete this._brightnessProxy;
+        if (this._brightnessManagerChangedId && Main.brightnessManager) {
+            Main.brightnessManager.disconnect(this._brightnessManagerChangedId);
+            this._brightnessManagerChangedId = null;
+        }
 
-        if (this._brightnessBatteryId) {
+        if (this._brightnessBatteryId && this._settings) {
             this._settings.disconnect(this._brightnessBatteryId);
             this._brightnessBatteryId = null;
         }
-        if (this._brightnessAcId) {
+        if (this._brightnessAcId && this._settings) {
             this._settings.disconnect(this._brightnessAcId);
             this._brightnessAcId = null;
         }
     }
 
     _updateScreenBrightness() {
-        if (this._brightnessProxy.Brightness === null || this._powerManagerProxy.OnBattery === null)
+        if (!Main.brightnessManager?.globalScale || this._powerManagerProxy?.OnBattery === null)
             return;
 
+        let brightnessPercent;
         if (this._powerManagerProxy.OnBattery)
-            this._brightnessProxy.Brightness = this._settings.get_int('brightness-battery');
+            brightnessPercent = this._settings.get_int('brightness-battery');
         else
-            this._brightnessProxy.Brightness = this._settings.get_int('brightness-ac');
+            brightnessPercent = this._settings.get_int('brightness-ac');
+
+        // (0-100) to (0.0-1.0)
+        const brightnessValue = Math.clamp(brightnessPercent / 100.0, 0.0, 1.0);
+        Main.brightnessManager.globalScale.value = brightnessValue;
     }
 
     _logError(...args) {
