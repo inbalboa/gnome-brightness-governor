@@ -84,8 +84,4 @@ export default class ScreenBrightnessGovernorExtension extends Extension {
         const brightnessValue = Math.clamp(brightnessPercent / 100.0, 0.0, 1.0);
         Main.brightnessManager.globalScale.value = brightnessValue;
     }
-
-    _logError(...args) {
-        console.error(`${this.uuid}:`, ...args);
-    }
 }
