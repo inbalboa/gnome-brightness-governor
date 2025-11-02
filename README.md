@@ -9,7 +9,7 @@ Automatically switch the screen brightness depending on the power supply status.
 
 - GNOME Shell 48+
 
-### Installation
+## Installation
 
 ### From GNOME Extensions
 
