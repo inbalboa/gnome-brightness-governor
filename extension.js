@@ -43,15 +43,18 @@ export default class ScreenBrightnessGovernorExtension extends Extension {
             Gio.DBus.system,
             'org.freedesktop.UPower',
             '/org/freedesktop/UPower',
-            (_proxy, error) => {
+            (proxy, error) => {
                 if (error) {
                     console.error('Failed to connect to the org.freedesktop.UPower D-Bus interface', error);
                     return;
                 }
-                this._powerManagerProxy?.connectObject('g-properties-changed', (_proxy2, properties) => {
+                if (proxy !== this._powerManagerProxy)
+                    return;
+                proxy.connectObject('g-properties-changed', (_proxy, properties) => {
                     if (properties.lookup_value('OnBattery', null) !== null)
                         this._updateScreenBrightness();
                 }, this);
+                this._updateScreenBrightness();
             }
         );
     }
